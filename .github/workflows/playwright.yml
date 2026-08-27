@@ -44,12 +44,12 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright Tests
+      - name: Run Playwright Tests (Desktop Chrome)
         run: |
           if [ -n "${{ github.event.inputs.grep }}" ]; then
-            npx playwright test --grep "${{ github.event.inputs.grep }}" --project=chromium
+            npx playwright test --grep "${{ github.event.inputs.grep }}"
           else
-            npx playwright test --project=chromium
+            npx playwright test
           fi
 
       - name: Upload Test Report Artifact
@@ -71,6 +71,8 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
         if: ${{ !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        with:
+          enablement: true
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3

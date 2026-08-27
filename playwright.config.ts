@@ -17,7 +17,6 @@ export default defineConfig({
   ],
   use: {
     baseURL: BASE_URL,
-    // When running in CI, record video, full screenshot, and trace for all tests so GH Pages has full assets
     trace: process.env.CI ? 'on' : 'on-first-retry',
     screenshot: 'on',
     video: process.env.CI ? 'on' : 'retain-on-failure',
@@ -28,14 +27,6 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
     },
   ],
 });
