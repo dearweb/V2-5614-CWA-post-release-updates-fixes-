@@ -17,9 +17,9 @@ export default defineConfig({
   ],
   use: {
     baseURL: BASE_URL,
-    trace: process.env.CI ? 'on' : 'on-first-retry',
-    screenshot: 'on',
-    video: process.env.CI ? 'on' : 'retain-on-failure',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
     actionTimeout: 20_000,
     navigationTimeout: 60_000,
   },

@@ -21,7 +21,7 @@ concurrency:
 jobs:
   test:
     name: Spec Matrix (${{ matrix.name }})
-    timeout-minutes: 30
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -46,8 +46,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
+      - name: Get Playwright Version for Cache
+        id: playwright-version
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> $GITHUB_ENV
+
+      - name: Cache Playwright Browser Binaries
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install Playwright Browsers & OS Dependencies
+        run: |
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
+            npx playwright install --with-deps chromium
+          else
+            npx playwright install-deps chromium
+          fi
 
       - name: Run Playwright Test Spec (${{ matrix.spec }})
         run: npx playwright test ${{ matrix.spec }} --reporter=blob
@@ -59,14 +75,6 @@ jobs:
           name: blob-report-${{ matrix.name }}
           path: blob-report/
           retention-days: 7
-
-      - name: Upload Test Results & Screenshots
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: test-results-${{ matrix.name }}
-          path: test-results/
-          retention-days: 14
 
   compile-and-deploy-report:
     name: Compile & Deploy Unified Report
