@@ -70,20 +70,20 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        if: ${{ !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        if: ${{ always() && !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') }}
         with:
           enablement: true
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
-        if: ${{ !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+        if: ${{ always() && !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') }}
         with:
           path: playwright-report/
 
   deploy-report:
     name: Deploy Report to GitHub Pages
     needs: test
-    if: ${{ !cancelled() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+    if: ${{ always() && !cancelled() && needs.test.result != 'cancelled' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -92,3 +92,10 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Add Report Link to Workflow Summary
+        if: ${{ always() && steps.deployment.outputs.page_url != '' }}
+        run: |
+          echo "## 📊 Test Report Deployed to GitHub Pages" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Live Report URL:** [View Playwright HTML Report](${{ steps.deployment.outputs.page_url }})" >> $GITHUB_STEP_SUMMARY
+          echo "🕒 **Deployed At:** $(date -u)" >> $GITHUB_STEP_SUMMARY

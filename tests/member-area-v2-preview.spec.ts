@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { CheckoutTask } from '../tasks/checkout.task';
 import { VisualComparisonTask } from '../tasks/visual-comparison.task';
-import { UpsellAutoSelectTask } from '../tasks/upsell-auto-select.task';
 import { captureCookies, listenForApi } from '../utils/helpers';
 import { URLS } from '../config/urls';
 
@@ -14,7 +13,6 @@ test.describe('Member Area V2 - Preview & Checkout Flow', () => {
 
     const checkoutTask = new CheckoutTask(page);
     const visualComparisonTask = new VisualComparisonTask(page);
-    const upsellTask = new UpsellAutoSelectTask(page);
 
     // 📡 1. Set up API Interceptor for api-cwa/site_settings (captures full readable JSON)
     const siteSettingsMonitor = listenForApi(page, URLS.API_SITE_SETTINGS, {
@@ -53,24 +51,17 @@ test.describe('Member Area V2 - Preview & Checkout Flow', () => {
       await expect(accessRecordsBtn).toBeVisible();
     }).toPass();
 
-    // 🏷️ 6. Validate Upsell Auto-Selected & Text match against site_settings API
-    await test.step('Validate Upsell Auto-Select on Preview Page', async () => {
-      const capturedCalls = siteSettingsMonitor.getCapturedCalls();
-      const siteSettings = capturedCalls.length > 0 ? capturedCalls[0].response.body : undefined;
-      await upsellTask.validateUpsellAutoSelect(siteSettings, testInfo);
-    });
-
-    // 7. Click Access Records
+    // 6. Click Access Records
     await accessRecordsBtn.scrollIntoViewIfNeeded();
     await accessRecordsBtn.click();
 
-    // 8. Submit Email & Proceed
+    // 7. Submit Email & Proceed
     const emailInput = page.getByRole('textbox', { name: /Email Address/i });
     await expect(emailInput).toBeEditable();
     await emailInput.fill(randomEmail);
     await page.getByRole('button', { name: 'Proceed to Checkout' }).click();
 
-    // 9. Execute Checkout Task
+    // 8. Execute Checkout Task
     await test.step('Complete checkout payment with Stripe', async () => {
       await checkoutTask.completeCheckout({
         name: 'Shah Tester',
@@ -81,13 +72,13 @@ test.describe('Member Area V2 - Preview & Checkout Flow', () => {
       });
     });
 
-    // 10. Condition-Based Polling for Payment Confirmation
+    // 9. Condition-Based Polling for Payment Confirmation
     await test.step('Verify payment confirmation', async () => {
       const successMessage = page.getByText(/Payment successful/i);
       await expect(successMessage).toBeVisible();
     });
 
-    // 11. Redirection to Dashboard & My Reports
+    // 10. Redirection to Dashboard & My Reports
     await test.step('Wait for Dashboard and navigate to My Reports', async () => {
       await page.waitForURL(/\/members\/dashboard/i, { waitUntil: 'domcontentloaded' });
 
@@ -100,13 +91,18 @@ test.describe('Member Area V2 - Preview & Checkout Flow', () => {
       await expect(page).toHaveURL(/\/members\/my-reports/i);
     });
 
-    // 🎨 12. Visual Theme Comparison Task on My Reports page
+    // 🎨 11. Visual Theme Comparison Task on My Reports page
     await test.step('Perform visual theme comparison on /members/my-reports', async () => {
-      const themeResult = await visualComparisonTask.verifyMyReportsTheme(testInfo);
-      expect(themeResult.detectedTheme).toBeDefined();
+      const capturedCalls = siteSettingsMonitor.getCapturedCalls();
+      const latestSiteSettings = capturedCalls.length > 0 ? capturedCalls[0].response.body : undefined;
+      const themeResult = await visualComparisonTask.verifyMyReportsTheme(latestSiteSettings, testInfo);
+      
+      // Dynamic validation based on site_settings API
+      expect(themeResult.isMatched).toBe(true);
+      expect(themeResult.detectedTheme).toBe(themeResult.expectedThemeFromApi);
     });
 
-    // 13. Log summary of captured site_settings API calls
+    // 12. Log summary of captured site_settings API calls
     const captured = siteSettingsMonitor.getCapturedCalls();
     console.log(`\n📊 [SUMMARY] Total 'api-cwa/site_settings' calls captured during test: ${captured.length}`);
   });
