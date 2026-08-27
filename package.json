@@ -1,0 +1,20 @@
+{
+  "name": "cwa-release-v2-5614",
+  "version": "1.0.0",
+  "description": "Playwright E2E Automation for Member Area V2",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:upsell": "playwright test tests/upsell-auto-select.spec.ts",
+    "test:theme": "playwright test tests/member-area-v2-preview.spec.ts",
+    "report": "playwright show-report"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.4.0"
+  }
+}
