@@ -14,6 +14,7 @@ export const URLS = {
   DASHBOARD: (vin?: string) =>
     vin ? `${BASE_URL}/members/dashboard?vin=${encodeURIComponent(vin)}` : `${BASE_URL}/members/dashboard`,
   MY_REPORTS: `${BASE_URL}/members/my-reports`,
+  SIGNUP: `${BASE_URL}/members/signup`,
   API_SITE_SETTINGS: 'api-cwa/site_settings',
 };
 
