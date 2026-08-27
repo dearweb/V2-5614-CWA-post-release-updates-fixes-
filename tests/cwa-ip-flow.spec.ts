@@ -4,9 +4,15 @@ import fs from 'fs';
 import { CookieIpInjector, IP_POOL } from '../utils/cookie.helper';
 import { SessionIpStickinessTask } from '../tasks/session-ip-stickiness.task';
 import { SignupAuthFlowTask } from '../tasks/signup-auth-flow.task';
+import { BrowseTheWeb } from '../utils/browse-the-web.helper';
 import { URLS } from '../config/urls';
 
 test.describe('CWA IP & Currency Localization Flow', () => {
+
+  test.beforeEach(async ({ page }) => {
+    // 🛡️ Auto-intercept and dismiss cookie consent banners, GDPR, and modals
+    BrowseTheWeb.using(page);
+  });
 
   // Case 1: Before vs After IP Modification
   test('1. Verify cwa_ip injection (Before vs After)', { tag: ['@cookies', '@ip-inject'] }, async ({ page }, testInfo) => {
